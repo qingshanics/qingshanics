@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>青山行傳：故事啟程</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f2ddcf;
+  color: #a23131;
+  font-family: "Microsoft JhengHei", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#dialogueText {
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+#dialogueText::after {
+  content: "|";
+  animation: blink 1s infinite;
+}
+
+#dialogueBox {
+  position: relative;
+  background: #a23131;
+  color: #f2ddcf;
+  width: 80vw;
+  max-width: 720px;
+  min-height: 160px;
+  padding: 20px 30px;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 4px 15px #a2313188;
+  user-select: none;
+  outline: none;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+  z-index: 1000;
+}
+
+#speakerName {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #f2ddcf;
+  text-shadow: 0 0 5px #a23131;
+  animation: glow 2.5s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 5px #a23131; }
+  50% { text-shadow: 0 0 12px #f2ddcf; }
+}
+
+.divider {
+  height: 2px;
+  background: linear-gradient(90deg, #f2ddcf 20%, #a23131 50%, #f2ddcf 80%);
+  margin-bottom: 12px;
+  border-radius: 1px;
+}
+
+#dialogueBox.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#skipHint {
+  position: absolute;
+  right: 20px;
+  bottom: 12px;
+  color: #f2ddcfcc;
+  font-size: 14px;
+  animation: blink 1.2s infinite ease-in-out;
+  user-select: none;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Auto 按鈕 */
+#dialogueControls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1010;
+}
+
+#dialogueControls button {
+  background-color: #f2ddcf;
+  color: #a23131;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#dialogueControls button:hover {
+  background-color: #ffe9d8;
+}
+
+#autoBtn.active {
+  background-color: #a23131;
+  color: #f2ddcf;
+}
+
+/* 黑幕動畫 */
+.black-screen {
+  position: fixed;
+  width: 100%;
+  height: 50vh;
+  background-color: #000;
+  z-index: 10000;
+  transition: transform 1.2s ease-in-out;
+}
+
+.black-screen.top {
+  top: 0;
+  transform: translateY(0);
+}
+
+.black-screen.bottom {
+  bottom: 0;
+  transform: translateY(0);
+}
+
+.black-screen.open.top {
+  transform: translateY(-100%);
+}
+
+.black-screen.open.bottom {
+  transform: translateY(100%);
+}
+
+.transition-close .black-screen.top {
+  transform: translateY(0%) !important;
+}
+
+.transition-close .black-screen.bottom {
+  transform: translateY(0%) !important;
+}
+
+/* 風吹動畫 */
+#windEffect {
+  position: fixed;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(120deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 60%);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 999;
+}
+
+.windAnimation {
+  animation: windMove 1s ease-out forwards;
+}
+
+@keyframes windMove {
+  0% { left: -100%; opacity: 0.4; }
+  50% { opacity: 0.2; }
+  100% { left: 100%; opacity: 0; }
+}
+
+/* 中央圖片 */
+#imageContainer {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  z-index: 900;
+  max-width: 120vw;
+  max-height: 80vh;
+  opacity: 0;
+  transition: opacity 0.6s ease-in-out;
+}
+#imageContainer img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+#imageContainer.visible {
+  opacity: 1;
+}
+</style>
+</head>
+
+<body>
+
+  <!-- 黑幕 -->
+  <div class="black-screen top active"></div>
+  <div class="black-screen bottom active"></div>
+
+  <!-- 風吹動畫 -->
+  <div id="windEffect"></div>
+
+  <!-- 中央圖片 -->
+  <div id="imageContainer"><img id="dialogueImage" src="" alt="對話圖片"></div>
+
+  <!-- 對話框 + Auto按鈕 -->
+  <div id="dialogueBox" tabindex="0">
+    <div id="speakerName">迷之音</div>
+    <div class="divider"></div>
+    <div id="dialogueText"></div>
+    <div id="skipHint">點擊或空白鍵繼續...</div>
+  </div>
+  
+  <div id="dialogueControls">
+    <button id="autoBtn">AUTO</button>
+  </div>
+
+<script>
+const dialogues = [
+  { text: "恭喜你完成全部考驗，你已經看見艋舺的另一面。", img: "img/scene5.png" },
+  { text: "不只是街市、廟埕與人聲，也是信念、庇佑與歲月沉積的力量。", img: "img/scene6.png" },
+  { text: "願你將這份理解帶著走。", img: "img/scene7.png" },
+  { text: "....."},
+  { text: "「善信，汝辛苦矣。」", img: "img/scene8.png"  }, 
+  { text: "你回頭，一陣清風拂過，神龕前燭光微晃。", img: "img/scene9.png" }, 
+  { text: "原來，一直守護著你的，是本次的主角靈安尊王。", img: "img/scene10.png"  } 
+];
+
+const dialogueTextEl = document.getElementById("dialogueText");
+const dialogueBox = document.getElementById("dialogueBox");
+const topScreen = document.querySelector(".black-screen.top");
+const bottomScreen = document.querySelector(".black-screen.bottom");
+const autoBtn = document.getElementById("autoBtn");
+const imageContainer = document.getElementById("imageContainer");
+const dialogueImage = document.getElementById("dialogueImage");
+const windEffect = document.getElementById("windEffect");
+
+let currentIndex = 0;
+let typingTimer = null;
+let dialogueStarted = false;
+let autoMode = false;
+const pauseTime = 1200; // 自動播放停頓
+
+// 打字機效果
+function typeWriter(text, i = 0) {
+  if (i < text.length) {
+    dialogueTextEl.textContent += text.charAt(i);
+    typingTimer = setTimeout(() => typeWriter(text, i + 1), 50);
+  } else {
+    typingTimer = null;
+    if (autoMode) {
+      typingTimer = setTimeout(() => showNextDialogue(), pauseTime);
+    }
+  }
+}
+
+// 風吹動畫函數
+function playWindEffect(callback) {
+  windEffect.classList.add("windAnimation");
+  setTimeout(() => {
+    windEffect.classList.remove("windAnimation");
+    if (callback) callback();
+  }, 1000);
+}
+
+// 顯示下一句對話
+function showNextDialogue() {
+  if (!dialogueStarted) return;
+  if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
+
+  if (currentIndex < dialogues.length) {
+    dialogueTextEl.textContent = "";
+
+    // 第五段前播放風吹
+    if (currentIndex === 5) {
+      playWindEffect(() => {
+        typeWriter(dialogues[currentIndex].text);
+      });
+    } else {
+      typeWriter(dialogues[currentIndex].text);
+    }
+
+    const imgSrc = dialogues[currentIndex].img || "";
+    if (imgSrc) {
+      imageContainer.style.opacity = 0;
+      setTimeout(() => { dialogueImage.src = imgSrc; imageContainer.style.opacity = 1; }, 400);
+    } else {
+      imageContainer.style.opacity = 0;
+      setTimeout(() => dialogueImage.src = "", 400);
+    }
+
+    currentIndex++;
+  } else {
+    topScreen.classList.remove("open");
+    bottomScreen.classList.remove("open");
+    document.body.classList.add("transition-close");
+    setTimeout(() => { window.location.href = "start.html"; }, 1300);
+  }
+}
+
+// 開始對話
+function startDialogue() {
+  dialogueBox.classList.add("visible");
+  dialogueStarted = true;
+  showNextDialogue();
+}
+
+// AUTO 按鈕
+autoBtn.addEventListener("click", () => {
+  autoMode = !autoMode;
+  autoBtn.classList.toggle("active", autoMode);
+  if (autoMode && dialogueStarted && typingTimer === null) showNextDialogue();
+});
+
+// 全畫面點擊觸發下一句
+window.addEventListener("click", (e) => {
+  if (e.target.closest("#dialogueControls")) return;
+  if (autoMode) { autoMode = false; autoBtn.classList.remove("active"); }
+  showNextDialogue();
+});
+
+// 空白鍵觸發下一句
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    if (autoMode) { autoMode = false; autoBtn.classList.remove("active"); }
+    showNextDialogue();
+  }
+});
+
+// 開場黑幕
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    topScreen.classList.add("open");
+    bottomScreen.classList.add("open");
+
+    setTimeout(() => {
+      startDialogue();
+    }, 1200); // 黑幕淡出時間
+  }, 100);
+});
+</script>
+</body>
+</html>

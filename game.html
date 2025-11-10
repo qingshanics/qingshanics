@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>青山行傳：故事啟程</title>
+
+  <style>
+    body {
+  margin: 0;
+  padding: 0;
+  background-color: #f2ddcf;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow-x: hidden;
+  font-family: "Microsoft JhengHei", sans-serif;
+}
+
+#mapContainer {
+  position: relative;
+  width: 90vw;
+  max-width: 1080px;
+  border: 3px solid #a23131;
+  box-shadow: 0 0 12px #000000aa;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#mapTitle {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #a23131;
+  font-size: 2.4rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px #0008;
+  user-select: none;
+  pointer-events: none;
+  z-index: 10;
+  animation: titlePulse 4s ease-in-out infinite;
+}
+
+#gameMap {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 任務點 */
+.pin {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: #e53e3e;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+  z-index: 20;
+}
+
+.pin:hover {
+  transform: scale(1.3);
+  box-shadow: 0 0 10px #FFD700;
+  z-index: 30;
+}
+
+.pin::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+
+.pin:hover::after {
+  opacity: 1;
+}
+
+/* 吉祥物 */
+#mascot {
+  position: fixed;
+  bottom: 20px;
+  left: -150px; /* 初始在畫面左外 */
+  width: 150px;
+
+  opacity: 0;
+  /* 不加transition，動畫用keyframes */
+}
+
+.mascot-enter {
+  animation: mascotFloatIn 2s forwards;
+  opacity: 1;
+}
+
+/* 吉祥物動畫 */
+.mascot-sway {
+  animation: mascotSway 3s ease-in-out infinite;
+}
+
+@keyframes mascotSway {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(5deg);
+  }
+}
+
+@keyframes mascotBreath {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.05); }
+}
+
+@keyframes mascotFloatIn {
+  0% {
+    left: -150px;
+    opacity: 0;
+  }
+  100% {
+    left: 10px;
+    opacity: 1;
+  }
+}
+
+/* 對話框 */
+#dialogueBox {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  width: 90vw;
+  max-width: 720px;
+  min-height: 160px;
+  background: #a23131;
+  color: #f2ddcf;
+  padding: 20px 30px;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 4px 15px #a2313188;
+  user-select: none;
+  outline: none;
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 1.6;
+  z-index: 10000;
+  cursor: pointer;
+
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#dialogueBox.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+#dialogueBox.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#dialogueText {
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+#dialogueText::after {
+  content: "|";
+  animation: blinkCursor 1.2s infinite ease-in-out;
+  color: #f2ddcfcc;
+}
+
+@keyframes blinkCursor {
+  0%, 100% {opacity: 1;}
+  50% {opacity: 0.3;}
+}
+
+#skipHint {
+  position: absolute;
+  right: 20px;
+  bottom: 12px;
+  color: #f2ddcfcc;
+  font-size: 14px;
+  animation: blink 1.2s infinite ease-in-out;
+  user-select: none;
+}
+
+@keyframes blink {
+  0%, 100% {opacity: 1;}
+  50% {opacity: 0.3;}
+}
+
+/* 彈窗背景遮罩 */
+#missionModal  {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+#missionModal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#missionModal > .modal-content {
+  background: linear-gradient(135deg, #A23131, #6B1B1B);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.5);
+  width: 360px;
+  max-width: 90vw;
+  padding: 24px 30px;
+  color: #F2DDCF;
+  font-family: "Noto Serif TC", serif;
+  position: relative;
+  animation: modalFadeIn 0.35s ease forwards;
+}
+
+#missionModal .modal-content .link-button {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 10px 18px;
+  background-color: #f2ddcf;
+  color: #a23131;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  box-shadow: 0 0 6px #a23131aa;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#missionModal .modal-content .link-button:hover {
+  background-color: #a23131;
+  color: #f2ddcf;
+  box-shadow: 0 0 12px #a23131ee;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* 頭像和標題區 */
+#missionHeader {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  border-bottom: 2px solid #F2DDCF;
+  padding-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* 任務分類標籤 */
+#missionHeader .category-tag {
+  background: #F2DDCF;
+  color: #A23131;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 2px 10px;
+  border-radius: 14px;
+  user-select: none;
+}
+
+/* 任務描述文字 */
+#missionDescription {
+  margin-top: 16px;
+  line-height: 1.5;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+
+#closeModal {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 28px;
+  color: #F2DDCF;
+  cursor: pointer;
+  transition: color 0.25s ease;
+  user-select: none;
+}
+#closeModal:hover {
+  color: #FFD700;
+}
+
+
+.hidden {
+  display: none !important;
+}
+
+/* Auto 按鈕 */
+#dialogueControls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1010;
+}
+
+#dialogueControls button {
+  background-color: #f2ddcf;
+  color: #a23131;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#dialogueControls button:hover {
+  background-color: #d65b5b;
+  color: #fff;
+}
+
+#autoBtn.active {
+  background-color: #a23131;
+  color: #f2ddcf;
+  box-shadow: 0 0 10px #a23131aa;
+}
+
+/* 講者名稱 */
+#speakerName {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #f2ddcf;
+  text-shadow: 0 0 5px #a23131;
+  animation: glow 2.5s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { text-shadow: 0 0 5px #a23131; }
+  50% { text-shadow: 0 0 12px #f2ddcf; }
+}
+
+.divider {
+  height: 2px;
+  background: linear-gradient(90deg, #f2ddcf 20%, #a23131 50%, #f2ddcf 80%);
+  margin-bottom: 12px;
+  border-radius: 1px;
+}
+
+
+/* 新增動畫 */
+@keyframes titlePulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.05); }
+}
+
+/* 飄入動畫 */
+@keyframes mascotDriftIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-40px) rotate(20deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(70px) rotate(0deg); /* 回正 */
+  }
+}
+
+/* 停在定點後的漂浮動畫 */
+@keyframes mascotFloat {
+  0%   { transform: translate(70px, 0); }
+  25%  { transform: translate(72px, -5px); }
+  50%  { transform: translate(70px, 5px); }
+  75%  { transform: translate(68px, -3px); }
+  100% { transform: translate(70px, 0); }
+}
+
+.mascot-enter {
+  animation: mascotDriftIn 1.8s ease-out forwards;
+}
+
+.mascot-float {
+  animation: mascotFloat 4s ease-in-out infinite;
+}
+
+#bgParticles {
+  position: fixed;
+  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  mix-blend-mode: screen; /* 讓白色發光不壓色 */
+}
+
+#introTransition {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle, #000000 10%, #000000 90%);
+  z-index: 99999;
+  animation: introFadeOut 1s ease-out forwards;
+}
+
+@keyframes introFadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 0.8; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+#outroTransition {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #ffffff;
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: none;
+  transition: opacity 1s ease-in;
+}
+
+#outroTransition.show {
+  display:none; 
+  position:fixed; 
+  top:0; 
+  left:0; 
+  width:100%; 
+  height:100%; 
+  background:#ffffff; 
+  opacity:0; 
+  transition: opacity 1s;
+}
+  </style>
+</head>
+<body>
+  <div id="introTransition"></div>
+  <canvas id="bgParticles"></canvas>
+  <h1 id="mapTitle">萬華地圖</h1>
+  <div id="mapContainer">
+    <img id="gameMap" src="img/map.jpg" alt="任務地圖" />
+    <!-- JS 插入任務點 -->
+  </div>
+
+  <!-- 吉祥物 -->
+  <img id="mascot" src="img/angel.png" alt="吉祥物" />
+
+  <!-- 對話框 -->
+  <div id="dialogueBox" tabindex="0">
+    <div id="speakerName">迷之音</div>
+    <div class="divider"></div>
+    <p id="dialogueText"></p>
+    <div id="skipHint">點擊或空白鍵繼續...</div>
+
+  </div>
+
+  <!-- 任務彈窗 -->
+  <div id="missionModal" class="hidden">
+    <div class="modal-content">
+      <span id="closeModal">&times;</span>
+      <h2 id="missionHeader"></h2>
+      <p id="missionDescription"></p>
+    </div>
+  </div>
+
+  <!-- 對話控制按鈕 -->
+  <div id="dialogueControls">
+    <button id="autoBtn">AUTO</button>
+  </div>
+
+  <div id="outroTransition" ></div>
+  <script>
+    const dialogueTexts = [
+  { speaker: "守護靈", text: "你好，勇敢的旅人。" },
+  { speaker: "守護靈", text: "我是守護靈，一直在等你出現。" },
+  { speaker: "守護靈", text: "萬華正面臨信仰的考驗，只有你能喚醒沉睡的力量。" },
+  { speaker: "守護靈", text: "地圖上共有三個地點。" },
+  { speaker: "守護靈", text: "每個地點都有一個試煉，你必須完成它們，才能重現艋舺盛況。" },
+  { speaker: "守護靈", text: "準備好了嗎？我們先來試試第一個！" }
+];
+
+// 任務點資料
+const missionPoints = [
+  {
+    top: "30%", left: "40%",
+    label: "艋舺青山宮",
+    category: "【尊王的旨意】",
+    description: "最後相當簡單，就看看靈安尊王能不能認同你吧！",
+    link: 'mission3.html'  // 有連結按鈕
+  },
+
+  {
+    top: "75%", left: "55%",
+    label: "萬華車站",
+    category: "【艋舺好厝邊】",
+    description: "集合艋舺四大廟宇，讓信仰之力再現光景。",
+    link: 'mission1.html'  // 有連結按鈕
+  },
+  {
+    top: "20%", left: "80%",
+    label: "青草巷",
+    category: "【消滅蟾蜍精】",
+    description: "蟾蜍精又來肆虐了，運用你的文化知識打敗它吧。",
+    link: 'mission2.html'  // 有連結按鈕
+  }
+];
+
+// 元素抓取
+const mapContainer = document.getElementById("mapContainer");
+const dialogueBox = document.getElementById("dialogueBox");
+const speakerName = document.getElementById("speakerName");
+const dialogueText = document.getElementById("dialogueText");
+const missionModal = document.getElementById("missionModal");
+const modalContent = missionModal.querySelector('.modal-content');
+const missionHeader = document.getElementById("missionHeader");
+const missionDescription = document.getElementById("missionDescription");
+const closeModalBtn = document.getElementById("closeModal");
+const autoBtn = document.getElementById("autoBtn");
+const mascot = document.getElementById("mascot");
+const outro = document.getElementById("outroTransition");
+
+let dialogueIndex = 0;
+let autoMode = false;
+let autoTimer = null;
+let typingTimer = null;
+let isTyping = false;
+let isAtEndPrompt = false; 
+
+// 顯示逐字打字效果對話
+function showDialogue(index) {
+  dialogueBox.classList.add("show");
+  if (index < 0 || index >= dialogueTexts.length) return;
+  if (typingTimer) {
+    clearTimeout(typingTimer);
+    typingTimer = null;
+  }
+
+  const fullText = dialogueTexts[index];
+  speakerName.textContent = fullText.speaker;
+  dialogueText.textContent = "";
+  dialogueText.style.textAlign = "left";  // 重設文字置左
+
+  // 顯示右下角提示
+  const skipHint = document.getElementById("skipHint");
+  if (skipHint) {
+    skipHint.style.display = "block";
+  }
+
+  let charIndex = 0;
+  isTyping = true;
+
+  function typeNextChar() {
+    if (charIndex < fullText.text.length) {
+      dialogueText.textContent += fullText.text.charAt(charIndex);
+      charIndex++;
+      typingTimer = setTimeout(typeNextChar, 50);
+    } else {
+      isTyping = false;
+      if (autoMode) {
+        if (index === dialogueTexts.length - 1) {
+          showEndPrompt();
+          stopAuto();
+        } else {
+          setTimeout(() => {
+            nextDialogue();
+          }, 1000);
+        }
+      }
+    }
+  }
+
+  typeNextChar();
+}
+
+function showEndPrompt() {
+  speakerName.textContent = "迷之音";
+  dialogueText.textContent = "請點擊任務點，展開你的旅程！";
+  dialogueText.style.textAlign = "center";
+  isAtEndPrompt = true;
+
+  // 隱藏右下角提示
+  const skipHint = document.getElementById("skipHint");
+  if (skipHint) {
+    skipHint.style.display = "none";
+  }
+}
+
+// 下一句對話
+function nextDialogue() {
+  if (isTyping) {
+    if (typingTimer) {
+      clearTimeout(typingTimer);
+      typingTimer = null;
+    }
+    const fullText = dialogueTexts[dialogueIndex];
+    dialogueText.textContent = fullText.text;
+    speakerName.textContent = fullText.speaker;
+    isTyping = false;
+
+    // 顯示右下角提示
+    const skipHint = document.getElementById("skipHint");
+    if (skipHint) {
+      skipHint.style.display = "block";
+    }
+
+    if (dialogueIndex === dialogueTexts.length - 1) {
+      stopAuto();
+      showEndPrompt();
+    }
+  } else {
+    dialogueIndex++;
+    if (dialogueIndex >= dialogueTexts.length) {
+      dialogueIndex = dialogueTexts.length - 1;
+      stopAuto();
+      showEndPrompt();
+      return;
+    }
+    showDialogue(dialogueIndex);
+  }
+}
+
+// 上一句對話
+function prevDialogue() {
+  dialogueIndex--;
+  if (dialogueIndex < 0) dialogueIndex = 0;
+  showDialogue(dialogueIndex);
+}
+
+// 自動播放對話
+function autoPlayDialogue() {
+  if (autoTimer) clearTimeout(autoTimer);
+  if (dialogueIndex >= dialogueTexts.length - 1) {
+    stopAuto();
+    return;
+  }
+  autoTimer = setTimeout(() => {
+    nextDialogue();
+    if (autoMode) autoPlayDialogue();
+  }, 1500);
+}
+
+// 開啟自動模式
+function startAuto() {
+  autoMode = true;
+  autoBtn.classList.add("active");
+  autoPlayDialogue();
+}
+
+// 停止自動模式
+function stopAuto() {
+  autoMode = false;
+  autoBtn.classList.remove("active");
+  if (autoTimer) {
+    clearTimeout(autoTimer);
+    autoTimer = null;
+  }
+}
+
+// 【註解掉原本對話框內的點擊事件，改由全域監聽器控制】
+// dialogueBox.addEventListener("click", () => {
+//   if (isAtEndPrompt) return;  // 最後提示不執行下一句
+//   if (autoMode) stopAuto();
+//   nextDialogue();
+// });
+
+// 空白鍵跳下一句（保留）
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (isAtEndPrompt) return;  // 最後提示不執行下一句
+    if (autoMode) stopAuto();
+    nextDialogue();
+  }
+});
+
+// 全域點擊事件：點擊任何不在彈窗或按鈕區域的地方跳下一句
+document.addEventListener("click", (e) => {
+  if (isAtEndPrompt) return;
+
+  // 排除點擊彈窗、按鈕、關閉按鈕時觸發
+  if (e.target.closest('#missionModal') || e.target.closest('.link-button') || e.target.closest('#closeModal')) {
+    return;
+  }
+
+  if (autoMode) stopAuto();
+  nextDialogue();
+});
+
+function startNewDialogue() {
+  isAtEndPrompt = false;
+  dialogueIndex = 0;
+  showDialogue(dialogueIndex);
+}
+
+// AUTO 按鈕事件
+autoBtn.addEventListener("click", () => {
+  if (autoMode) stopAuto();
+  else startAuto();
+});
+
+// 創建任務點標記
+function createMissionPins() {
+  missionPoints.forEach((point, idx) => {
+    const pin = document.createElement("div");
+    pin.classList.add("pin");
+    pin.style.top = point.top;
+    pin.style.left = point.left;
+    pin.setAttribute("data-label", point.label);
+    pin.title = point.category;
+
+    if (point.label === "萬華車站") {
+      pin.style.cursor = "pointer";
+      pin.addEventListener("click", (e) => {
+        e.stopPropagation();
+        missionHeader.textContent = point.label + " " + point.category;
+        missionDescription.textContent = point.description;
+
+        // 先移除舊按鈕，避免累積
+        const oldBtn = modalContent.querySelector('.link-button');
+        if (oldBtn) oldBtn.remove();
+
+        // 若有 link 屬性，加入按鈕
+        if (point.link) {
+          const btn = document.createElement('button');
+          btn.className = 'link-button';
+          btn.textContent = '任務開始';
+          modalContent.appendChild(btn);
+
+          btn.addEventListener('click', () => {
+            // 1. 播放轉場動畫
+            playOutroTransition(() => {
+              // 2. 動畫結束後跳頁
+              window.location.href = point.link;
+            });
+          });
+        }
+        missionModal.classList.remove("hidden");
+      });
+    } else {
+      // 其餘點不可點，視覺上可加灰階或禁用樣式
+      pin.style.cursor = "not-allowed";
+      pin.style.opacity = "0.5";  // 半透明表示不可點
+      // 不加入點擊事件
+    }
+
+    mapContainer.appendChild(pin);
+  });
+}
+
+// 關閉任務彈窗
+closeModalBtn.addEventListener("click", () => {
+  missionModal.classList.add("hidden");
+});
+
+// 點擊彈窗外關閉
+missionModal.addEventListener("click", (e) => {
+  if (e.target === missionModal) {
+    missionModal.classList.add("hidden");
+  }
+});
+
+// 吉祥物漂入 + 回正並開始對話
+function mascotEntrance() {
+  mascot.style.opacity = "1";
+  mascot.style.left = "10px";
+
+  // 先加漂入動畫 class
+  mascot.classList.add("mascot-enter");
+
+  // 漂入動畫結束後，開始原地漂浮並顯示第一句對話
+  mascot.addEventListener("animationend", () => {
+    mascot.classList.remove("mascot-enter");
+    mascot.classList.add("mascot-float");
+    showDialogue(dialogueIndex);
+  }, { once: true });
+}
+
+function init() {
+  createMissionPins();
+  mascotEntrance(); // 呼叫吉祥物動畫與對話
+}
+
+const canvas = document.getElementById('bgParticles');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+const particleCount = 500;
+
+// 滑鼠位置
+let mouse = { x: null, y: null };
+window.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+for (let i = 0; i < particleCount; i++) {
+  const angle = Math.random() * 2 * Math.PI;
+  const radius = Math.random() * 2 + 1;
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: radius,
+    angle,
+    speed: Math.random() * 0.5 + 0.2,
+    baseX: 0,
+    baseY: 0
+  });
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  particles.forEach((p) => {
+    // 顏色為白金漸層
+    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)'); // 更亮
+    gradient.addColorStop(1, 'rgba(255, 200, 150, 0.3)'); // 帶淡金橘，與背景協調
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = 'rgba(255, 240, 200, 0.9)';
+    ctx.shadowBlur = 20;
+    ctx.fill();
+
+    // 靈氣飄移
+    p.angle += 0.005;
+    p.x += Math.cos(p.angle) * p.speed;
+    p.y += Math.sin(p.angle) * p.speed;
+
+    // 避開滑鼠
+    const dx = p.x - mouse.x;
+    const dy = p.y - mouse.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 60) {
+      p.x += dx / dist * 1.5;
+      p.y += dy / dist * 1.5;
+    }
+
+    // 邊界循環
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+  });
+
+  requestAnimationFrame(drawParticles);
+}
+
+drawParticles();
+
+window.onload = () => {
+  setTimeout(() => {
+    document.getElementById("introTransition").style.display = "none";
+  }, 3000);
+};
+
+function playOutroTransition(callback) {
+  const outro = document.getElementById("outroTransition");
+  outro.style.display = "block";
+  // 觸發 CSS transition
+  setTimeout(() => {
+    outro.style.opacity = "1";
+  }, 10);
+
+  // 等待 transition 結束 (約 1 秒)
+  setTimeout(() => {
+    callback();
+  }, 1000);
+}
+
+init();
+</script>
+
+</body>
+</html>

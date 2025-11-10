@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>青山行傳：故事啟程</title>
+  
+  <style>
+    /* 基本設定 */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Serif TC', serif;
+  background-color: #f2ddcf;
+  color: #3a1e1e;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+
+/* 主容器置中 */
+.container {
+  z-index: 10;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 標題 */
+#gameTitle {
+  font-size: 70px;
+  font-weight: 700;
+  color: #a23131;
+  margin-bottom: 2rem;
+  letter-spacing: 2px;
+  line-height: 1.2;
+  animation: fadeInUp 1.5s ease forwards;
+  text-shadow: 2px 2px 5px rgba(162, 49, 49, 0.6);
+}
+.poetic-line {
+  text-shadow: 1px 1px 3px rgba(162, 49, 49, 0.5);
+}
+#subTitle {
+  font-size: 20px;
+  font-style: italic;
+  color: #7a1a1a;
+  margin-bottom: 3rem;
+  letter-spacing: 1px;
+  opacity: 0;
+  animation: fadeInUp 2s 1.5s forwards;
+  text-shadow: 1px 1px 3px rgba(122, 26, 26, 0.5);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Logo */
+#logo {
+  max-width: 60vw;
+  max-height: 300px;
+  object-fit: contain;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  border-radius: 16px;
+  padding: 10px;
+}
+
+
+
+/* 按鈕排版 */
+.buttonRow {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+button:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2) inset;
+}
+
+/* 按鈕樣式 */
+button {
+  background-color: #a23131;
+  color: #f2ddcf;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-family: 'Noto Serif TC', serif;
+}
+
+button:hover {
+  background-color: #8f2a2a;
+  transform: scale(1.05);
+}
+
+/* 籤詩字句 */
+.poetic-line {
+  font-size: 1.2rem;
+  font-style: italic;
+  color: #a23131;
+  animation: poeticFade 3s ease-in-out infinite alternate;
+}
+
+@keyframes poeticFade {
+  from { opacity: 0.2; }
+  to { opacity: 1; }
+}
+
+
+.paper-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+  overflow: hidden;
+}
+
+/* 紙張飄落強化動畫 */
+.paper {
+  position: fixed;
+  top: -60px;
+  will-change: transform, opacity;
+  animation-name: fallSwayRotate;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  animation-duration: 8s;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes fallSwayRotate {
+  0% {
+    transform: translateX(0) translateY(-60px) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(var(--sway, 20px)) translateY(40vh) rotate(calc(180deg * var(--rotate-direction, 1)));
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) translateY(110vh) rotate(calc(360deg * var(--rotate-direction, 1)));
+    opacity: 0;
+  }
+}
+
+/* 轉場遮罩 */
+#transition {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0);
+  pointer-events: none;
+  transition: background 1.2s ease;
+  z-index: 9999;
+}
+
+#transition.active {
+  background: #000000;
+  pointer-events: auto;
+}
+
+#enableBtn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 140px;
+  height: 48px;
+  background: rgba(162, 49, 49, 0.85);
+  border-radius: 8px;
+  border: none;
+  color: white;
+  font-size: 20px;     /* 增大字體 */
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 5px 12px rgba(162,49,49,0.7);
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+  user-select: none;
+  
+  /* 改用 padding 和 line-height */
+  padding: 0 20px;
+  line-height: 48px;
+  text-align: center;
+  white-space: nowrap;  /* 防止換行 */
+  overflow: visible;
+}
+
+/* 閃爍動畫 */
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+#enableBtn.flash {
+  animation: flash 2s ease-in-out infinite;
+}
+
+/* 隱藏按鈕 */
+#enableBtn.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+  <audio id="bgm" src="audio/bgm.mp3"  loop muted></audio>
+  <button id="enableBtn">開啟音樂</button>
+  
+
+<!-- 紙張飄落容器 -->
+<div class="paper-container"></div>
+  <div id="transition"></div>
+  <div class="container">
+    <div id="gameTitle">青山行傳：故事啟程</div>
+    <div id="subTitle">踏上青山之路，揭開青山王傳奇</div>
+    <img id="logo" src="img/logo.png" alt="遊戲 Logo" />
+    <div class="buttonRow">
+      <button id="startBtn">開始遊戲</button>
+      <button id="exitBtn">退出遊戲</button>
+    </div>
+    <div class="poetic-line">「靈安不老，尊王永存。」</div>
+  </div>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+  const startBtn = document.getElementById("startBtn");
+  const exitBtn = document.getElementById("exitBtn");
+  const paperContainer = document.querySelector(".paper-container");
+  const transition = document.getElementById("transition");
+
+const enableBtn = document.getElementById("enableBtn");
+const bgm = document.getElementById("bgm");
+
+let isPlaying = false;
+let isMuted = false;
+
+enableBtn.addEventListener("click", () => {
+  if (!isPlaying) {
+    // 播放音樂，解除靜音
+    bgm.muted = false;
+    bgm.volume = 0.01;
+    bgm.play().then(() => {
+      isPlaying = true;
+      isMuted = false;
+      enableBtn.textContent = "音樂播放中";
+      enableBtn.classList.add("flash");
+    }).catch(err => {
+      console.error("播放錯誤", err);
+    });
+  } else {
+    // 已經在播放，進行靜音/解除靜音的切換
+    isMuted = !isMuted;
+    if (isMuted) {
+      bgm.muted = true;
+      bgm.pause();
+      isPlaying = false;
+      enableBtn.textContent = "音樂暫停";
+      enableBtn.classList.remove("flash");
+    } else {
+      bgm.muted = false;
+      bgm.play().then(() => {
+        isPlaying = true;
+        enableBtn.textContent = "音樂播放中";
+        enableBtn.classList.add("flash");
+      }).catch(err => {
+        console.error("播放錯誤", err);
+      });
+    }
+  }
+});
+
+
+  function createPaper() {
+    const paper = document.createElement("img");
+    paper.src = "img/paper.png";
+    paper.classList.add("paper");
+
+    const startLeft = Math.random() * window.innerWidth;
+    const size = 30 + Math.random() * 80;
+    paper.style.left = `${startLeft}px`;
+    paper.style.width = `${size}px`;
+
+    const delay = Math.random() * 2;
+    paper.style.setProperty('--delay', `${delay}s`);
+
+    const sway = (Math.random() * 60) - 30;
+    paper.style.setProperty('--sway', `${sway}px`);
+
+    const rotateDirection = Math.random() < 0.5 ? 1 : -1;
+    paper.style.setProperty('--rotate-direction', rotateDirection);
+
+    paperContainer.appendChild(paper);
+
+    setTimeout(() => {
+      paper.remove();
+    }, 15000);
+  }
+
+  let paperInterval = setInterval(createPaper, 300);
+
+  startBtn.addEventListener('click', () => {
+    transition.classList.add("active");
+
+    clearInterval(paperInterval);
+    let rapidInterval = setInterval(createPaper, 100);
+
+    setTimeout(() => {
+      clearInterval(rapidInterval);
+      paperInterval = setInterval(createPaper, 300);
+    }, 1000);
+
+    setTimeout(() => {
+      transition.style.backgroundColor = "#000";
+    }, 1200);
+
+    setTimeout(() => {
+      window.location.href = "intro.html";
+    }, 2200);
+  });
+
+  exitBtn.addEventListener("click", () => {
+    alert("請手動關閉此視窗或按 ESC 鍵退出。");
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === "Escape") {
+      alert("請手動關閉此視窗或按 ESC 鍵退出。");
+    }
+  });
+
+});
+  </script>
+  
+</body>
+</html>

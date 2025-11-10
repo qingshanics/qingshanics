@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>消滅蟾蜍精</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  body {
+    margin:0; padding:0;
+    background: #F2DDCF;
+    font-family: 'Press Start 2P', cursive;
+    user-select: none;
+  }
+
+  /* 關卡介紹頁面 */
+#introScreen {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #F2DDCF;
+  font-family: 'Press Start 2P', cursive;
+  overflow: hidden;
+}
+
+.intro-container {
+  background: rgba(255, 255, 255, 0.85);
+  border: 6px solid #a97c6e;
+  min-height: 50vh;
+  box-shadow:
+    4px 4px 0 #6b4f3b,
+    inset 0 0 15px rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 48px 36px;
+  max-width: 900px;
+  text-align: center;
+  color: #5d3c22;
+  filter: drop-shadow(3px 3px 0 #664f32);
+}
+
+.intro-container h1 {
+  font-size: 48px;
+  margin: 0 0 20px 0;
+  color: #8b4e1f;
+  text-shadow:
+    2px 2px 0 #3c1e00,
+    4px 4px 3px rgba(0, 0, 0, 0.2);
+}
+
+.intro-container p {
+  font-size: 24px;
+  line-height: 1.7;
+  margin-bottom: 36px;
+  letter-spacing: 1px;
+}
+
+#startBtn {
+  font-family: 'Press Start 2P';
+  font-size: 16px;
+  padding: 16px 48px;
+  background-color: #a35428;
+  color: #fff;
+  border: 4px solid #422c15;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow:
+    5px 5px 0 #422c15;
+  transition: background-color 0.3s ease;
+}
+
+#startBtn:hover {
+  background-color: #bf662f;
+  box-shadow:
+    2px 2px 0 #422c15;
+}
+
+#startBtn:active {
+  box-shadow: none;
+  transform: translate(3px, 3px);
+}
+
+/* 裝飾的像素小方塊，左上和右下 */
+.pixel-decoration {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: #a35428;
+  box-shadow:
+    8px 0 #a35428,
+    0 8px #a35428,
+    8px 8px #a35428;
+}
+
+.pixel-decoration.top-left {
+  top: 32px;
+  left: 32px;
+  background-color: #d4a96d;
+  box-shadow:
+    8px 0 #d4a96d,
+    0 8px #d4a96d,
+    8px 8px #d4a96d;
+}
+
+.pixel-decoration.bottom-right {
+  bottom: 32px;
+  right: 32px;
+  background-color: #6b4f3b;
+  box-shadow:
+    8px 0 #6b4f3b,
+    0 8px #6b4f3b,
+    8px 8px #6b4f3b;
+}
+
+  /* 戰鬥頁面 */
+  #battleScreen {
+    display: none;
+    height: 100vh;
+    background:#F2DDCF;
+    color: #222;
+    padding: 40px 20px;
+    box-sizing: border-box;
+  }
+  .battle-area {
+    display: flex;
+    justify-content: space-between;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .character {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .char-sprite {
+    width: 160px;
+    height: 160px;
+    image-rendering: pixelated;
+    filter: drop-shadow(1px 1px 0 #000);
+  }
+
+  /* HP條寶可夢風格 */
+  .hp-bar {
+    position: relative;
+    width: 160px;
+    height: 20px;
+    border: 3px solid #333;
+    background: linear-gradient(90deg, #ccc 30%, #999 70%);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow:
+      inset 0 3px 6px rgba(255,255,255,0.7),
+      inset 0 -3px 6px rgba(0,0,0,0.4);
+  }
+  .hp-fill {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #6FCF97 0%, #3a8f52 100%);
+    box-shadow:
+      0 0 6px #46c146,
+      inset 0 0 6px #46c146;
+    transition: width 0.4s ease;
+  }
+  .hp-fill.boss {
+    background: linear-gradient(90deg, #EB5757 0%, #a03333 100%);
+    box-shadow:
+      0 0 6px #d64848,
+      inset 0 0 6px #d64848;
+  }
+
+  /* 角色名稱框 */
+  .char-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #222;
+    text-shadow: 1px 1px 1px #FFF;
+    margin-bottom: 6px;
+  }
+
+  /* 戰鬥訊息 */
+  #messageBox {
+    max-width: 960px;
+    margin: 20px auto 0 auto;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    min-height: 40px;
+    color: #222;
+    background: rgba(255,255,255,0.85);
+    border: 4px solid #333;
+    border-radius: 8px;
+    box-shadow: 3px 3px 0 #999 inset;
+    padding: 10px;
+    user-select: none;
+  }
+
+  /* 題目與選項 */
+  #questionArea {
+    max-width: 960px;
+    margin: 40px auto 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+  #questionText {
+    font-size: 16px;
+    margin-bottom: 14px;
+    color: #222;
+    text-shadow: 1px 1px 1px #fff;
+  }
+  .options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  .optionBtn {
+    background: #F2DDCF;
+    border: 3px solid #333;
+    border-radius: 8px;
+    padding: 14px 10px;
+    font-family: 'Press Start 2P';
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 3px 3px 0 #888;
+  }
+  .optionBtn:hover:not(.disabled) {
+    background: #e0c5b2;
+    box-shadow: 3px 3px 0 #555;
+  }
+  .optionBtn.disabled {
+    cursor: default;
+    background: #bbb;
+    box-shadow: none;
+    color: #555;
+  }
+
+  /* 打擊搖晃動畫 */
+  .shake {
+    animation: shakeAnim 0.4s ease;
+  }
+  @keyframes shakeAnim {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
+
+  /* 勝利、失敗訊息 */
+  #resultScreen {
+    display: none;
+    height: 100vh;
+    background: #F2DDCF;
+    font-family: 'Press Start 2P', cursive;
+    color: #222;
+    text-align: center;
+    padding-top: 15vh;
+    user-select: none;
+  }
+  #resultScreen h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+  #resultScreen button {
+    font-family: 'Press Start 2P';
+    font-size: 14px;
+    background: #EB5757;
+    color: white;
+    padding: 14px 28px;
+    border: 4px solid #000;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #000;
+    transition: background 0.3s;
+  }
+  #resultScreen button:hover {
+    background: #cf4343;
+  }
+
+  /* 強化打擊效果：紅色閃爍 */
+.hit-flash {
+  filter: brightness(2) contrast(2) saturate(3) sepia(1) hue-rotate(-20deg);
+  animation: flashRed 0.2s ease;
+}
+@keyframes flashRed {
+  0%   { filter: brightness(2) contrast(2) sepia(1) hue-rotate(-20deg); }
+  100% { filter: none; }
+}
+
+/* 題目進度顯示 */
+#questionProgress {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+  text-shadow: 1px 1px 0 #fff;
+}
+
+/* GameBoy 式對話框樣式 */
+#messageBox {
+  font-family: 'Press Start 2P';
+  background: #d0cbc4;
+  border: 4px solid #3a3a3a;
+  border-radius: 8px;
+  padding: 12px;
+  color: #222;
+  box-shadow:
+    4px 4px 0 #777,
+    inset -2px -2px 0 #fff,
+    inset 2px 2px 0 #aaa;
+}
+
+/* 全站配色與陰影調整 */
+.optionBtn {
+  background: #e0c5b2;
+  border-color: #3a3a3a;
+  box-shadow: 4px 4px 0 #555;
+}
+.optionBtn:hover:not(.disabled) {
+  background: #c5a48c;
+  box-shadow: 2px 2px 0 #333;
+}
+.hp-bar {
+  background: linear-gradient(90deg, #eee 30%, #bbb 70%);
+  border: 3px solid #222;
+}
+
+/* 淡出 */
+.fade-out {
+  animation: fadeOut 0.5s forwards;
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* 淡入 */
+.fade-in {
+  animation: fadeIn 0.5s forwards;
+  opacity: 0;
+}
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.flash-correct {
+  animation: flashGreen 0.4s ease;
+  box-shadow: 0 0 12px 4px #4caf50;
+  border-color: #4caf50;
+}
+@keyframes flashGreen {
+  0%, 100% { box-shadow: none; border-color: initial; }
+  50% { box-shadow: 0 0 12px 4px #4caf50; border-color: #4caf50; }
+}
+
+/* 答錯紅色閃光 */
+.flash-wrong {
+  animation: flashRed 0.4s ease;
+  box-shadow: 0 0 12px 4px #e53935;
+  border-color: #e53935;
+}
+@keyframes flashRed {
+  0%, 100% { box-shadow: none; border-color: initial; }
+  50% { box-shadow: 0 0 12px 4px #e53935; border-color: #e53935; }
+}
+.damage-text {
+  position: absolute;
+  font-size: 18px;
+  font-weight: bold;
+  pointer-events: none;
+  animation: floatUp 0.8s ease-out forwards;
+  color: #e53935;
+  text-shadow: 1px 1px 0 #fff;
+  z-index: 10;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0px); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+.hit-circle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 80, 80, 0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: expandFade 0.4s ease-out forwards;
+  z-index: 9;
+}
+
+@keyframes expandFade {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+  .impact-flash {
+    animation: impactFlash 0.3s ease;
+  }
+  @keyframes impactFlash {
+    0% { background-color: rgba(255, 0, 0, 0.3); }
+    100% { background-color: transparent; }
+  }
+
+  /* 2. 登場動畫 */
+  .char-sprite.enter {
+    animation: enter 0.6s ease;
+  }
+  @keyframes enter {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* 3. 傷害浮動數字 */
+  .damage-number {
+    position: absolute;
+    font-size: 20px;
+    font-weight: bold;
+    color: red;
+    top: 0;
+    animation: floatUp 0.8s ease forwards;
+    pointer-events: none;
+  }
+  @keyframes floatUp {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-40px); }
+  }
+
+  /* 4. 火花特效 */
+  .smoke {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(#333, transparent);
+    animation: puff 0.6s ease-out forwards;
+    pointer-events: none;
+    z-index: 2;
+  }
+  @keyframes puff {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 關卡介紹頁面 -->
+<div id="introScreen">
+      <div class="intro-container">
+  <h1>關卡介紹</h1>
+  <p>艋舺瘟疫再起，修煉三百年的蟾蜍精重現人間</p>
+  <p>唯有真正理解青山宮文化的人，才能對牠造成傷害。</p>
+  <p>答對 5 題即可擊敗蟾蜍精。</p>
+  <p>你準備好守護艋舺的平安了嗎？</p>
+  <button id="startBtn">開始挑戰</button>
+</div>
+ <div class="pixel-decoration top-left"></div>
+  <div class="pixel-decoration bottom-right"></div>
+</div>
+
+<!-- 戰鬥頁面 -->
+<div id="battleScreen">
+
+  <div class="battle-area">
+
+    <div class="character" id="hero">
+      <div class="char-name">主角</div>
+      <div class="hp-bar"><div class="hp-fill" id="heroHP"></div></div>
+      <img src="img/lingan.png"主角" class="char-sprite" />
+    </div>
+
+    <div class="character" id="boss">
+      <div class="char-name">蟾蜍精</div>
+      <div class="hp-bar"><div class="hp-fill boss" id="bossHP"></div></div>
+      <img src="img/frog.png"蟾蜍精" class="char-sprite" />
+    </div>
+
+  </div>
+
+  <div id="messageBox">請回答下列問題！</div>
+  <div id="factBox" style="max-width:960px; margin:12px auto 0 auto; font-size:20px; color:#555; min-height:40px; text-align:center; user-select:none;"></div>
+
+  <div id="questionArea">
+    <div id="questionText"></div>
+    <div class="options" id="options"></div>
+  </div>
+
+</div>
+
+<!-- 結果頁 -->
+<div id="resultScreen">
+  <h2 id="resultMessage"></h2>
+  <p id="redirectNotice" style="margin-top: 12px; font-size: 14px; color: #666; display:none;"></p>
+  <div id="questionProgress"></div>
+</div>
+
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const introScreen = document.getElementById('introScreen');
+  const battleScreen = document.getElementById('battleScreen');
+  const resultScreen = document.getElementById('resultScreen');
+  const resultMessage = document.getElementById('resultMessage');
+  const retryBtn = document.getElementById('retryBtn');
+
+  const heroHPFill = document.getElementById('heroHP');
+  const bossHPFill = document.getElementById('bossHP');
+  const heroSprite = document.querySelector('#hero .char-sprite');
+  const bossSprite = document.querySelector('#boss .char-sprite');
+
+  const messageBox = document.getElementById('messageBox');
+  const questionText = document.getElementById('questionText');
+  const optionsContainer = document.getElementById('options');
+  const factBox = document.getElementById('factBox');
+
+  // 題庫
+  const questions = [
+   {
+    q: "青山宮的主神是誰？",
+    a: ["城隍爺", "靈安尊王", "媽祖", "保生大帝"],
+    correct: 1,
+    fact: "靈安尊王，又稱青山王，是艋舺青山宮的主神，守護著艋舺。",
+     explanations: [
+      "城隍爺是掌管陰陽與城池安寧的神明，非青山宮主祀。",
+      "正確！靈安尊王即青山王，是青山宮的主神。",
+      "媽祖是海上守護神，與青山宮無直接關聯。",
+      "保生大帝是醫神，主要信仰地點不在艋舺。"
+    ]
+    
+  },
+  {
+    q: "青山宮位於哪個區？",
+    a: ["萬華區", "大安區", "松山區", "中山區"],
+    correct: 0,
+    fact: "青山宮位於臺北市萬華區，是當地重要的信仰中心。",
+    explanations: [
+      "正確！青山宮就位在萬華區康定路上。",
+      "大安區以文教與商業為主，無青山宮。",
+      "松山有慈祐宮，非青山宮所在地。",
+      "中山區以行天宮為代表，與青山宮無關。"
+    ]
+  },
+  {
+    q: "青山王季最著名的是哪一活動？",
+    a: ["八將喊班", "搶孤", "做十六歲", "平安橋"],
+    correct: 0,
+    fact: "青山王的八將喊班是最具特色的活動。",
+    explanations: [
+      "正確！八將喊班是當中最具特色的神秘儀式。",
+      "搶孤是中元節的活動，與青山宮無關。",
+      "三太子繞境與其他宮廟活動相關。",
+      "平安橋儀式各廟都有，非青山宮特色。"
+    ]
+  },
+  {
+    q: "青山宮每年文化季約在農曆幾月？",
+    a: ["七月", "十月", "一月", "五月"],
+    correct: 1,
+    fact: "青山宮文化季與青山王生日都在農曆十月，吸引大量信眾參與。",
+    explanations: [
+      "七月多與中元節、普渡相關，非青山宮文化季時間。",
+      "正確！青山王聖誕在農曆10月23日。",
+      "一月是過年期間，與青山宮文化季無關。",
+      "五月常是端午節，與青山王信仰無直接關聯。"
+    ]
+  },
+  {
+    q: "青山宮起源可以追溯到哪一朝代？",
+    a: ["清朝", "明朝", "唐朝", "日治時期"],
+    correct: 0,
+    fact: "青山宮於清朝咸豐六年建成，已有悠久歷史。",
+     explanations: [
+      "正確！青山宮創建於清朝咸豐年間。",
+      "明朝尚未有大規模台灣廟宇建立。",
+      "唐朝與台灣歷史關聯較少，當時台灣未被中國統治。",
+      "日治時期已是青山宮存在之後的時代。"
+    ]
+  },
+  {
+    q: "青山王的部將為以下何者？",
+    a: ["關平周倉", "枷鎖將軍", "龜蛇將軍", "水金將軍"],
+    correct: 1,
+    fact: "青山王部將為枷鎖將軍，以紅、綠臉譜出現。",
+    explanations: [
+      "關平周倉為關聖帝君的部將。",
+      "正確！枷鎖將軍為靈安尊王的部將。",
+      "龜蛇將軍為玄天上帝的部將。",
+      "水金將軍為天上聖母的部將。"
+    ]
+  },
+  {
+    q: "青山王繞境途中常會發放甚麼？",
+    a: ["元本山海苔", "刈包", "鹹光餅", "韭菜水餃"],
+    correct: 2,
+    fact: "鹹光餅原是征戰的乾糧，而後轉為保平安的象徵。",
+    explanations: [
+      "海苔很好吃，但與題目毫無關係。",
+      "刈包很好吃，但與題目毫無關係。",
+      "正確！鹹光餅為北部繞境特色。",
+      "韭菜水餃很好吃，與題目毫無關係。"
+    ]
+  },
+  {
+    q: "以下軒社何者不屬於青山宮？",
+    a: ["靈安社", "青山會", "鳳音社", "義英社"],
+    correct: 0,
+    fact: "靈安社屬於大稻埕霞海城隍廟，為稻江八大軒社之一。",
+    explanations: [
+      "正確！靈安社為大稻埕霞海城隍廟駕前軒社。",
+      "青山會為第四個青山宮駕前軒社。",
+      "鳳音社為第三個青山宮駕前軒社。",
+      "義英社為第一個青山宮駕前軒社。"
+    ]
+  },
+  {
+    q: "青山宮祖廟位於何處？",
+    a: ["福建省惠安縣", "福建省浦田市", "福建省南安市", "湖北省十堰市"],
+    correct: 0,
+    fact: "青山王祖廟為惠安縣的惠安青山宮。",
+    explanations: [
+      "正確！靈安尊王祖廟為惠安縣的惠安青山宮。",
+      "此為天上聖母祖廟-湄洲天后宮。",
+      "此為廣澤尊王祖廟-南安鳳山寺。",
+      "此為玄天上帝祖廟-武當山紫霄宮。"
+    ]
+  },
+  {
+    q: "青山宮附近著名的夜市是？",
+    a: ["士林夜市", "饒河街夜市", "華西街夜市", "寧夏夜市"],
+    correct: 2,
+    fact: "華西街夜市位於鄰近青山宮，充滿歷史氛圍。",
+    explanations: [
+      "士林夜市位於北士林區，距離艋舺相當遠。",
+      "饒河夜市在松山區，非青山宮附近。",
+      "正確！華西街夜市就在青山宮旁。",
+      "寧夏夜市靠近大同區，也不在青山宮周邊。"
+    ]
+  }
+];
+function shuffleArray(array) {
+  const arr = array.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+let shuffledQuestions = [];
+
+  let heroHP = 100;
+  let bossHP = 100;
+  const maxHP = 100;
+  let currentQIndex = 0;
+  let gameActive = false;
+
+  // 轉換血量到百分比寬度
+  function hpPercent(hp) {
+    return Math.max(0, Math.min(100, hp));
+  }
+
+  function updateHPBars() {
+    heroHPFill.style.width = hpPercent(heroHP) + '%';
+    bossHPFill.style.width = hpPercent(bossHP) + '%';
+  }
+
+  function shake(element) {
+    element.classList.add('shake');
+    setTimeout(() => element.classList.remove('shake'), 400);
+  }
+
+  function showQuestion() {
+    if (heroHP <= 0 || bossHP <= 0) {
+    endGame(bossHP <= 0);
+    return;
+  }
+  
+    if (currentQIndex >= questions.length) {
+      // 所有題答完，判定勝負
+      if (bossHP <= 0) {
+        endGame(true);
+      } else if (heroHP <= 0) {
+        endGame(false);
+      } else {
+        // 沒有分出勝負但題目完了，強制判定
+        if (bossHP > heroHP) endGame(false);
+        else endGame(true);
+      }
+      return;
+    }
+    const q = shuffledQuestions[currentQIndex];
+    questionText.textContent = q.q;
+    optionsContainer.innerHTML = '';
+    q.a.forEach((answer, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'optionBtn';
+      btn.textContent = answer;
+      btn.onclick = () => selectAnswer(idx);
+      optionsContainer.appendChild(btn);
+    });
+    messageBox.textContent = '請回答下列問題！';
+  }
+  function showDamage(targetElement, amount, isHeal = false) {
+  const dmg = document.createElement('div');
+  dmg.className = 'damage-text';
+  dmg.textContent = (isHeal ? '+' : '-') + amount;
+  dmg.style.color = isHeal ? '#4caf50' : '#e53935';
+  targetElement.appendChild(dmg);
+  setTimeout(() => dmg.remove(), 800);
+}
+
+function createHitEffect(targetElement) {
+  const circle = document.createElement('div');
+  circle.className = 'hit-circle';
+  targetElement.appendChild(circle);
+  setTimeout(() => circle.remove(), 400);
+}
+
+function showDamageEffect(target, amount) {
+  const dmg = document.createElement('div');
+  dmg.className = 'damage-number';
+  dmg.textContent = `-${amount}`;
+  target.appendChild(dmg);
+  setTimeout(() => dmg.remove(), 800);
+}
+
+function spawnSmoke(target) {
+  const smoke = document.createElement('div');
+  smoke.className = 'smoke';
+  smoke.style.left = '60px';
+  smoke.style.top = '80px';
+  target.appendChild(smoke);
+  setTimeout(() => smoke.remove(), 600);
+}
+
+function selectAnswer(selected) {
+  if (!gameActive) return;
+
+  const q = shuffledQuestions[currentQIndex];
+  const correctIdx = q.correct;
+  const isCorrect = selected === correctIdx;
+
+  // 禁用所有按鈕
+  Array.from(optionsContainer.children).forEach(btn => {
+    btn.disabled = true;
+    btn.classList.add('disabled');
+  });
+
+  const clickedBtn = optionsContainer.children[selected];
+
+  if (isCorrect) {
+    bossHP -= 20;
+    messageBox.textContent = '答對了！蟾蜍精受到傷害！';
+    shake(bossSprite);
+    bossSprite.classList.add('impact-flash');
+    setTimeout(() => bossSprite.classList.remove('impact-flash'), 300);
+    showDamageEffect(bossSprite.parentElement, 20);
+    spawnSmoke(bossSprite.parentElement);
+    clickedBtn.classList.add('flash-correct');
+    clickedBtn.addEventListener('animationend', () => {
+      clickedBtn.classList.remove('flash-correct');
+    }, { once: true });
+
+    showDamage(bossSprite.parentElement, 20);
+    createHitEffect(bossSprite.parentElement);
+
+    factBox.textContent = q.explanations[correctIdx];
+  } else {
+    heroHP -= 20;
+    messageBox.textContent = '答錯了！主角受到了攻擊！';
+    shake(heroSprite);
+    heroSprite.classList.add('impact-flash');
+    setTimeout(() => heroSprite.classList.remove('impact-flash'), 300);
+    showDamageEffect(heroSprite.parentElement, 20);
+    spawnSmoke(heroSprite.parentElement);
+    clickedBtn.classList.add('flash-wrong');
+    clickedBtn.addEventListener('animationend', () => {
+      clickedBtn.classList.remove('flash-wrong');
+    }, { once: true });
+
+    showDamage(heroSprite.parentElement, 20);
+    createHitEffect(heroSprite.parentElement);
+
+    factBox.textContent = q.explanations[selected];
+  }
+
+  updateHPBars();
+  currentQIndex++;
+
+  setTimeout(() => {
+    factBox.textContent = '';
+    showQuestion();
+    Array.from(optionsContainer.children).forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('disabled');
+    });
+  }, 1500);
+}
+  function endGame(isWin) {
+    gameActive = false;
+    battleScreen.style.display = 'none';
+    resultScreen.style.display = 'block';
+    resultMessage.textContent = isWin ? '恭喜你！成功消滅蟾蜍精！' : '很遺憾，你被蟾蜍精擊敗了！';
+
+    const redirectNotice = document.getElementById('redirectNotice');
+    let countdown = 2;
+    redirectNotice.style.display = 'block';
+    redirectNotice.textContent = `遊戲結束，${countdown}秒後自動跳轉下一關`;
+
+
+  const timer = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      redirectNotice.textContent = `遊戲結束，${countdown}秒後自動跳轉下一關`;
+    } else {
+      clearInterval(timer);
+      window.location.href = 'game3.html';
+    }
+  }, 1000);
+}
+
+startBtn.onclick = () => {
+  // 給介紹畫面加 fade-out 動畫
+  introScreen.classList.add('fade-out');
+
+  // 0.5秒後切換畫面
+  setTimeout(() => {
+    introScreen.style.display = 'none';
+    introScreen.classList.remove('fade-out');
+
+    // 顯示戰鬥畫面，並加 fade-in 動畫
+    battleScreen.style.display = 'block';
+    battleScreen.classList.add('fade-in');
+
+    // 0.5秒後移除 fade-in class，避免干擾後續動畫
+    setTimeout(() => battleScreen.classList.remove('fade-in'), 500);
+    shuffledQuestions = shuffleArray(questions);
+
+
+    // 遊戲初始化
+    gameActive = true;
+    heroHP = maxHP;
+    bossHP = maxHP;
+    currentQIndex = 0;
+    updateHPBars();
+    showQuestion();
+  }, 500);
+  
+};
+
+   heroSprite.classList.add('enter');
+  bossSprite.classList.add('enter');
+  setTimeout(() => {
+    heroSprite.classList.remove('enter');
+    bossSprite.classList.remove('enter');
+  }, 600);
+
+</script>
+
+</body>
+</html>

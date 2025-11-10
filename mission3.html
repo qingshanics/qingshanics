@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>尊王的旨意</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #f9ebe4, #ffe4c4, #fdf6e3);
+    font-family: "Noto Sans TC", "微軟正黑體", sans-serif;
+    color: #7A1E1E;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    justify-content: center;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  #introOverlay {
+    position: fixed; inset: 0;
+    background: rgba(249, 235, 228, 0.95);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
+  }
+  #introBox {
+    background: white;
+    border: 2px solid #7A1E1E;
+    border-radius: 12px;
+    padding: 28px 40px;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 6px 12px rgb(122 30 30 / 0.3);
+  }
+  #introBox h2 {
+    margin-bottom: 14px;
+    font-weight: 900;
+    font-size: 28px;
+  }
+  #introBox p {
+    margin-bottom: 28px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  #startBtn {
+    background-color: #7A1E1E;
+    border: none;
+    color: #f9ebe4;
+    font-weight: 700;
+    font-size: 18px;
+    padding: 12px 48px;
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgb(122 30 30 / 0.5);
+    transition: background-color 0.3s ease;
+  }
+  #startBtn:hover { background-color: #5d1717; }
+
+  #game {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    position: relative;
+  }
+
+  #gameTitle {
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .slot-machine {
+    background: #7A1E1E;
+    padding: 16px 20px;
+    border-radius: 16px;
+    display: flex;
+    gap: 18px;
+    box-shadow: 0 4px 15px rgb(122 30 30 / 0.6);
+    z-index: 1;
+  }
+
+  .reel {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    border: 3px solid #7A1E1E;
+  }
+
+  .reel-track {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+  }
+
+  .reel-track img {
+    display: block;
+    width: 100%;
+    height: 120px;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  #spinBtn {
+    background-color: #7A1E1E;
+    color: #f9ebe4;
+    font-size: 20px;
+    padding: 14px 60px;
+    border: none;
+    border-radius: 32px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 5px 15px rgb(122 30 30 / 0.5);
+    transition: background-color 0.3s ease;
+    user-select: none;
+    margin-top: 20px;
+  }
+  #spinBtn:hover:not(:disabled) { background-color: #5d1717; }
+  #spinBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #message {
+    font-weight: 700;
+    font-size: 20px;
+    min-height: 28px;
+    color: #7A1E1E;
+    text-align: center;
+  }
+
+  /* ===== 吉祥物 ===== */
+  #mascot {
+    position: absolute;
+    left: 180px;
+    bottom: 30px;
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 500;
+  }
+
+  #mascot img {
+    width: 200px;
+    animation: float 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  #speechBubble {
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff9e6;
+    color: #7A1E1E;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 4px 8px rgb(122 30 30 / 0.3);
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+  }
+  @keyframes bubbleJump {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  25% { transform: translateX(-50%) translateY(-5px) rotate(-2deg); }
+  50% { transform: translateX(-50%) translateY(-10px) rotate(2deg); }
+  75% { transform: translateX(-50%) translateY(-5px) rotate(-1deg); }
+}
+
+#speechBubble.show {
+  opacity: 1;
+  animation: bubbleJump 0.6s ease-out;
+}
+.cloud {
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  width: 60px;
+  height: 30px;
+  opacity: 0.7;
+  animation: floatCloud 8s ease-in-out infinite alternate;
+}
+
+@keyframes floatCloud {
+  0% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-15px) translateX(10px); }
+  100% { transform: translateY(0) translateX(0); }
+}
+.ribbon {
+  position: absolute;
+  width: 4px;
+  height: 40px;
+  background: linear-gradient(180deg, #ffe4c4, #f9ebe4);
+  border-radius: 2px;
+  animation: floatRibbon 3s ease-in-out infinite alternate;
+}
+
+@keyframes floatRibbon {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(10deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: gold;
+  border-radius: 50%;
+  animation: moveParticle 4s linear infinite;
+  opacity: 0.8;
+}
+
+@keyframes moveParticle {
+  0% { transform: translateY(0) translateX(0); opacity:1; }
+  100% { transform: translateY(-100px) translateX(30px); opacity:0; }
+}
+</style>
+</head>
+<body>
+
+<div id="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle" aria-describedby="introDesc">
+  <div id="introBox">
+    <h2 id="introTitle">尊王的旨意</h2>
+    <p id="introDesc">
+      只要任意3個圖案相同就能過關！<br />
+      快來試試你的手氣吧！
+    </p>
+    <button id="startBtn" aria-label="開始遊戲">開始遊戲</button>
+  </div>
+</div>
+
+<div id="game" role="main" aria-live="polite" aria-atomic="true">
+  <h2 id="gameTitle">尊王的旨意</h2>
+  <div class="cloud" style="top:50px; left:100px;"></div>
+<div class="cloud" style="top:150px; left:250px; width:80px; height:40px;"></div>
+<div class="ribbon" style="top:200px; left:350px;"></div>
+<div class="ribbon" style="top:100px; left:400px; height:50px;"></div>
+<div class="particle" style="top:300px; left:350px;"></div>
+<div class="particle" style="top:320px; left:380px;"></div>
+
+  <div style="display: flex; align-items: flex-end; justify-content: center; gap: 60px; width: 100%; position: relative;">
+    <!-- 吉祥物 -->
+    <div id="mascot">
+      <img src="img/angel.png" alt="小天使" />
+      <div id="speechBubble"></div>
+    </div>
+
+    <!-- 拉霸機 -->
+    <div class="slot-machine" aria-label="拉霸機">
+      <div class="reel" aria-label="滾輪一"><div class="reel-track"></div></div>
+      <div class="reel" aria-label="滾輪二"><div class="reel-track"></div></div>
+      <div class="reel" aria-label="滾輪三"><div class="reel-track"></div></div>
+    </div>
+  </div>
+
+  <button id="spinBtn">轉動</button>
+  <div id="message"></div>
+</div>
+
+<script>
+(() => {
+  const reelCount = 3;
+  const imgCount = 6;
+  const reelHeight = 120;
+  const maxSpins = 3;
+
+  const introOverlay = document.getElementById('introOverlay');
+  const startBtn = document.getElementById('startBtn');
+  const game = document.getElementById('game');
+  const spinBtn = document.getElementById('spinBtn');
+  const message = document.getElementById('message');
+  const reels = [...document.querySelectorAll('.reel-track')];
+
+  let spinTimes = 0;
+  let spinning = false;
+
+  function setupReels() {
+    reels.forEach(reel => {
+      reel.innerHTML = '';
+      for (let i = 0; i < imgCount * 2; i++) {
+        const imgNum = (i % imgCount) + 1;
+        const img = document.createElement('img');
+        img.src = `${imgNum}.png`;
+        img.alt = `艋舺元素${imgNum}`;
+        reel.appendChild(img);
+      }
+      reel.style.top = '0px';
+    });
+  }
+
+  function randomPos() {
+    return Math.floor(Math.random() * imgCount);
+  }
+
+  function checkWin(positions) {
+    return positions.every(val => val === positions[0]);
+  }
+
+  function showMsg(text) {
+    message.textContent = text;
+  }
+
+  function setSpinBtn(enabled) {
+    spinBtn.disabled = !enabled;
+  }
+
+  let animationFrameId;
+  let positions = [0,0,0];
+  let targetResults = [0,0,0];
+  let startPositions = [0,0,0];
+  let endPositions = [0,0,0];
+  let spinStartTime = null;
+  let decelStartTime = null;
+  let spinningState = 'idle';
+  const reelDecelOffsets = [0, 700, 1400];
+
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function animate(timestamp) {
+    if (!spinStartTime) spinStartTime = timestamp;
+    let elapsed = timestamp - spinStartTime;
+    let spinFastDuration = 3000;
+    let decelDuration = 4000;
+
+    if (spinningState === 'fast') {
+      for(let i=0;i<reelCount;i++){positions[i]+=30;positions[i]%=reelHeight*imgCount*2;reels[i].style.top=`-${positions[i]}px`;}
+      if(elapsed>spinFastDuration){spinningState='decelerate';decelStartTime=timestamp;startPositions=positions.slice();endPositions=targetResults.map(i=>i*reelHeight);for(let i=0;i<reelCount;i++){while(endPositions[i]<startPositions[i])endPositions[i]+=reelHeight*imgCount*2;}}
+    } else if(spinningState==='decelerate'){
+      let decelElapsed=timestamp-decelStartTime;
+      for(let i=0;i<reelCount;i++){
+        let localElapsed=decelElapsed-reelDecelOffsets[i];
+        if(localElapsed<0){positions[i]+=30;}
+        else if(localElapsed>=decelDuration){positions[i]=endPositions[i];}
+        else{let t=localElapsed/decelDuration;positions[i]=startPositions[i]+(endPositions[i]-startPositions[i])*easeOutCubic(t);}
+        positions[i]%=reelHeight*imgCount*2;
+        reels[i].style.top=`-${positions[i]}px`;
+      }
+      if(decelElapsed>decelDuration+reelDecelOffsets[reelCount-1]+100){
+        spinningState='done';
+      }
+    } else if(spinningState==='done'){
+      setSpinBtn(true);
+      spinning=false;
+      spinTimes++;
+
+       if (checkWin(targetResults)) {
+    showMsg('🎉 恭喜中獎！三個圖案相同！');
+
+    // 禁用按鈕
+    setSpinBtn(false);
+
+    // 1秒後跳轉
+    setTimeout(() => {
+      window.location.href = 'intro2.html';
+    }, 1000);
+
+  } else {
+    showMsg('未中獎，請再試試！');
+  }
+  cancelAnimationFrame(animationFrameId);
+  return;
+
+    }
+    animationFrameId=requestAnimationFrame(animate);
+  }
+
+  async function spin() {
+    if(spinning)return;
+    spinning=true;
+    setSpinBtn(false);
+    showMsg('拉霸機快速旋轉中...');
+    showRandomMessage();
+
+    if(spinTimes+1>=maxSpins){let forced=randomPos();targetResults=[forced,forced,forced];}
+    else targetResults=[randomPos(),randomPos(),randomPos()];
+
+    spinStartTime=null;
+    decelStartTime=null;
+    spinningState='fast';
+    positions=[0,0,0];
+    reels.forEach(reel=>reel.style.top='0px');
+    animationFrameId=requestAnimationFrame(animate);
+  }
+
+  function startGame() {
+    spinTimes=0; spinning=false;
+    introOverlay.style.display='none';
+    game.style.display='flex';
+    setupReels();
+    showMsg('請按轉動開始遊戲');
+    setSpinBtn(true);
+  }
+
+  startBtn.addEventListener('click', startGame);
+  spinBtn.addEventListener('click', spin);
+
+  // ===== 吉祥物訊息 =====
+  const speechBubble=document.getElementById('speechBubble');
+  const messages=[
+    "哎呀，又沒中獎喔～",
+    "快按轉動啦！",
+    "手氣不錯耶！",
+    "加油加油～",
+    "希望這次中大獎！"
+  ];
+
+function showRandomMessage(){
+  const msg = messages[Math.floor(Math.random() * messages.length)];
+  speechBubble.textContent = msg;
+
+  // 移除舊動畫
+  speechBubble.classList.remove('show');
+
+  // 觸發重播動畫
+  void speechBubble.offsetWidth; // 重新觸發 CSS 動畫
+  speechBubble.classList.add('show');
+
+  // 2.5 秒後淡出
+  setTimeout(() => {
+    speechBubble.style.opacity = 0;
+    speechBubble.classList.remove('show');
+  }, 2500);
+}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<title>《艋舺好厝邊》</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+
+  body {
+    margin: 0; padding: 0;
+    font-family: "Noto Sans TC", sans-serif;
+    background: #F2DDCF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    color: #4A3C31;
+  }
+  /* === 關卡介紹區塊 === */
+  #intro {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px 40px 40px 40px;
+    background: linear-gradient(145deg, #fff7f0, #f6e7db);
+    border-radius: 20px;
+    box-shadow:
+      0 8px 16px rgba(162, 124, 92, 0.25),
+      inset 0 0 12px rgba(255, 255, 255, 0.8);
+    text-align: left;
+    color: #5A3E1B;
+    font-weight: 500;
+    line-height: 1.7;
+    position: relative;
+    border: 2px solid #A23131;
+    
+  }
+  #intro h2 {
+    font-size: 2.8rem;
+    margin-bottom: 18px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: #7a4a23;
+    text-shadow: 0 1px 1px rgba(255 255 255 / 0.8);
+  }
+  #intro p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    line-height: 1.75;
+    text-indent: 1.2em;
+    letter-spacing: 0.02em;
+  }
+  #start-btn {
+    background: #B06C49;
+    border: none;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 700;
+    padding: 14px 44px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 10px rgba(176, 108, 73, 0.6);
+    transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+    margin-top: 35px;
+    display: inline-block;
+    user-select: none;
+  }
+  #start-btn:hover {
+    background: #8c4c2a;
+    box-shadow: 0 10px 18px rgba(140, 76, 42, 0.75);
+    transform: translateY(-2px);
+  }
+  #start-btn:active {
+    background: #6e3a1d;
+    box-shadow: 0 5px 7px rgba(110, 58, 29, 0.9);
+    transform: translateY(1px);
+  }
+  #intro .note {
+    margin-top: 18px;
+    font-size: 1rem;
+    color: #997548;
+    font-style: italic;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.75;
+    letter-spacing: 0.03em;
+  }
+
+  /* === 遊戲區塊 === */
+  #game {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    padding: 20px 30px;
+    
+  }
+  #game > p {
+    margin-bottom: 30px;
+    font-size: 1.2rem;
+    color: #6e4f3b;
+  }
+  #game-container {
+    display: flex;
+    gap: 50px;
+    width: 100%;
+    justify-content: center;
+  }
+  #photos {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  #names {
+    transform: translateY(50px);
+    display: flex;
+    flex-direction: column;
+    gap: 150px;
+  }
+  .photo-item, .name-item {
+    cursor: pointer;
+    border: 2px solid #A23131;  /* 你指定的紅色邊框 */
+    padding: 10px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 7px rgb(0 0 0 / 0.07);
+    user-select: none;
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+    min-width: 220px;
+    text-align: center;
+  }
+  .photo-item:hover:not(.matched), .name-item:hover:not(.matched) {
+    border-color: #7A1E1E;
+    box-shadow: 0 6px 14px rgba(162, 49, 49, 0.3);
+    background: #f9ebe4;
+  }
+  .photo-item.selected, .name-item.selected {
+    border-color: #7A1E1E;
+    background: #f2c9b4;
+    box-shadow: 0 0 12px #A23131AA;
+  }
+  .photo-item.matched, .name-item.matched {
+    border-color: #5A1A1A;
+    background: #d6e7c3;
+    cursor: default;
+    box-shadow: 0 0 12px #5A1A1ACC;
+    font-weight: 700;
+  }
+  img {
+    width: 220px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 10px;
+    user-select: none;
+  }
+  #message {
+    margin-top: 30px;
+    font-size: 1.3rem;
+    min-height: 48px;
+    color: #6e4f3b;
+    font-weight: 600;
+    transition: color 0.4s;
+    text-align: center;
+  }
+  
+</style>
+</head>
+<body>
+
+<div id="intro" class="fancy-intro">
+  <h2>關卡介紹</h2>
+  <p>歡迎挑戰《艋舺好厝邊》本關卡將考驗你的視覺記憶和文化認知能力，請從左側的神明照片中，正確配對右側的廟名。</p>
+  <p>如果配對錯誤，系統會提供該廟的特色提示，幫助你進一步了解萬華在地的信仰文化。</p>
+  <button id="start-btn">開始遊戲</button>
+  <div class="note">💡 提示：點選照片後，再點選廟名完成配對！</div>
+</div>
+
+<div id="game">
+  <p>請先點選一張神明照片，再點選對應的廟名。</p>
+  <div id="game-container">
+    <div id="photos"></div>
+    <div id="names"></div>
+  </div>
+  <div id="message"></div>
+</div>
+
+<script>
+  const temples = [
+    {
+      id: "qingshan",
+      name: "艋舺青山宮",
+      img: "img/qingshan.jpg",
+      hint: "本次畢展的主角。"
+    },
+    {
+      id: "tianhou",
+      name: "台北天后宮",
+      img: "img/tianhou.jpg",
+      hint: "就在西門町旁邊。"
+    },
+    {
+      id: "qingshuiyan",
+      name: "艋舺清水巖",
+      img: "img/qingshuiyan.png",
+      hint: "艋舺電影的取景地。"
+    },
+    {
+      id: "longshan",
+      name: "艋舺龍山寺",
+      img: "img/longshan.jpg",
+      hint: "很多人去那間廟是去拜月老。"
+    }
+  ];
+
+  const introDiv = document.getElementById('intro');
+  const startBtn = document.getElementById('start-btn');
+  const gameDiv = document.getElementById('game');
+  const photosDiv = document.getElementById("photos");
+  const namesDiv = document.getElementById("names");
+  const messageDiv = document.getElementById("message");
+
+  let selectedPhotoId = null;
+  let selectedNameId = null;
+  let matchedCount = 0;
+
+  function shuffleArray(arr) {
+    return arr
+      .map((v) => ({ v, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ v }) => v);
+  }
+
+  function initGame() {
+    photosDiv.innerHTML = "";
+    namesDiv.innerHTML = "";
+    messageDiv.textContent = "";
+    selectedPhotoId = null;
+    selectedNameId = null;
+    matchedCount = 0;
+
+    // 照片固定順序
+    temples.forEach(({ id, img }) => {
+      const div = document.createElement("div");
+      div.className = "photo-item";
+      div.dataset.id = id;
+      div.innerHTML = `<img src="${img}" alt="宮廟照片" />`;
+      div.addEventListener("click", () => selectPhoto(id, div));
+      photosDiv.appendChild(div);
+    });
+
+    // 廟名打亂
+    const shuffledTemples = shuffleArray(temples);
+    shuffledTemples.forEach(({ id, name }) => {
+      const div = document.createElement("div");
+      div.className = "name-item";
+      div.dataset.id = id;
+      div.textContent = name;
+      div.addEventListener("click", () => selectName(id, div));
+      namesDiv.appendChild(div);
+    });
+  }
+
+  function clearSelections() {
+    document.querySelectorAll(".selected").forEach(el => {
+      el.classList.remove("selected");
+    });
+  }
+
+  function selectPhoto(id, elem) {
+    if (elem.classList.contains("matched")) return;
+    clearSelections();
+    elem.classList.add("selected");
+    selectedPhotoId = id;
+    checkMatch();
+  }
+
+  function selectName(id, elem) {
+    if (elem.classList.contains("matched")) return;
+    clearSelections();
+    elem.classList.add("selected");
+    selectedNameId = id;
+    checkMatch();
+  }
+
+  function checkMatch() {
+    if (selectedPhotoId && selectedNameId) {
+      if (selectedPhotoId === selectedNameId) {
+        markMatched(selectedPhotoId);
+        messageDiv.style.color = "#4B7A29";
+        messageDiv.textContent = "配對正確！🎉";
+        matchedCount++;
+        if (matchedCount === temples.length) {
+  setTimeout(() => {
+    messageDiv.textContent = "恭喜你，完成所有配對！👏";
+  }, 500);
+
+  setTimeout(() => {
+    window.location.href = "game2.html";
+  }, 1500); 
+}
+      } else {
+        const wrongTemple = temples.find(t => t.id === selectedPhotoId);
+        messageDiv.style.color = "#A64A3F";
+        messageDiv.textContent = "配對錯誤提示： " + wrongTemple.hint;
+      }
+      selectedPhotoId = null;
+      selectedNameId = null;
+      setTimeout(() => {
+        clearSelections();
+      }, 1000);
+    }
+  }
+
+  function markMatched(id) {
+    document.querySelectorAll(`[data-id="${id}"]`).forEach(el => {
+      el.classList.add("matched");
+      el.classList.remove("selected");
+    });
+  }
+
+  startBtn.addEventListener('click', () => {
+    introDiv.style.display = 'none';
+    gameDiv.style.display = 'flex';
+    initGame();
+  });
+</script>
+
+</body>
+</html>
