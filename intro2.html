@@ -251,7 +251,7 @@ let dialogueStarted = false;
 let autoMode = false;
 const pauseTime = 1200; // 自動播放停頓
 
-// 打字機效果
+// 🖋 打字機效果
 function typeWriter(text, i = 0) {
   if (i < text.length) {
     dialogueTextEl.textContent += text.charAt(i);
@@ -264,43 +264,59 @@ function typeWriter(text, i = 0) {
   }
 }
 
-// 風吹動畫函數
-function playWindEffect(callback) {
+// 🌬 通用特效執行包裝
+function playEffect(effectFn, callback) {
+  if (effectFn) {
+    effectFn(() => callback && callback());
+  } else {
+    callback && callback();
+  }
+}
+
+// 🌬 風吹動畫
+function windEffectPlay(callback) {
   windEffect.classList.add("windAnimation");
   setTimeout(() => {
     windEffect.classList.remove("windAnimation");
-    if (callback) callback();
+    callback && callback();
   }, 1000);
 }
 
-// 顯示下一句對話
+// 🖼 更新圖片
+function updateImage(src) {
+  if (src) {
+    imageContainer.style.opacity = 0;
+    setTimeout(() => {
+      dialogueImage.src = src;
+      imageContainer.style.opacity = 1;
+    }, 400);
+  } else {
+    imageContainer.style.opacity = 0;
+    setTimeout(() => dialogueImage.src = "", 400);
+  }
+}
+
+// 💬 顯示下一句對話
 function showNextDialogue() {
   if (!dialogueStarted) return;
   if (typingTimer) { clearTimeout(typingTimer); typingTimer = null; }
 
   if (currentIndex < dialogues.length) {
     dialogueTextEl.textContent = "";
+    const dialogue = dialogues[currentIndex];
+    updateImage(dialogue.img);
 
-    // 第五段前播放風吹
-    if (currentIndex === 5) {
-      playWindEffect(() => {
-        typeWriter(dialogues[currentIndex].text);
-      });
-    } else {
-      typeWriter(dialogues[currentIndex].text);
-    }
+    // 根據 index 決定要不要播放特效
+    let effectFn = null;
+    if (currentIndex === 5) effectFn = windEffectPlay;
 
-    const imgSrc = dialogues[currentIndex].img || "";
-    if (imgSrc) {
-      imageContainer.style.opacity = 0;
-      setTimeout(() => { dialogueImage.src = imgSrc; imageContainer.style.opacity = 1; }, 400);
-    } else {
-      imageContainer.style.opacity = 0;
-      setTimeout(() => dialogueImage.src = "", 400);
-    }
+    playEffect(effectFn, () => {
+      typeWriter(dialogue.text);
+    });
 
     currentIndex++;
   } else {
+    // 對話結束 → 黑幕關上
     topScreen.classList.remove("open");
     bottomScreen.classList.remove("open");
     document.body.classList.add("transition-close");
@@ -308,28 +324,28 @@ function showNextDialogue() {
   }
 }
 
-// 開始對話
+// 🚀 開始對話
 function startDialogue() {
   dialogueBox.classList.add("visible");
   dialogueStarted = true;
   showNextDialogue();
 }
 
-// AUTO 按鈕
+// 🔘 AUTO 按鈕
 autoBtn.addEventListener("click", () => {
   autoMode = !autoMode;
   autoBtn.classList.toggle("active", autoMode);
   if (autoMode && dialogueStarted && typingTimer === null) showNextDialogue();
 });
 
-// 全畫面點擊觸發下一句
+// 🖱 點擊畫面
 window.addEventListener("click", (e) => {
   if (e.target.closest("#dialogueControls")) return;
   if (autoMode) { autoMode = false; autoBtn.classList.remove("active"); }
   showNextDialogue();
 });
 
-// 空白鍵觸發下一句
+// ⌨ 空白鍵
 window.addEventListener("keydown", (e) => {
   if (e.code === "Space") {
     if (autoMode) { autoMode = false; autoBtn.classList.remove("active"); }
@@ -337,7 +353,7 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-// 開場黑幕
+// 🕯 開場黑幕動畫
 window.addEventListener("load", () => {
   setTimeout(() => {
     topScreen.classList.add("open");
@@ -345,10 +361,9 @@ window.addEventListener("load", () => {
 
     setTimeout(() => {
       startDialogue();
-    }, 1200); // 黑幕淡出時間
+    }, 1200);
   }, 100);
 });
 </script>
 </body>
 </html>
-
